@@ -2,23 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:rentverse/features/property/domain/entity/list_property_entity.dart';
 
 class AccessoriseWidget extends StatelessWidget {
-  const AccessoriseWidget({
-    super.key,
-    required this.attributes,
-    this.amenities = const [],
-  });
+  const AccessoriseWidget({super.key, required this.attributes});
 
   final List<PropertyAttributeEntity> attributes;
-  final List<String> amenities;
 
   @override
   Widget build(BuildContext context) {
-    final amenityItems = amenities
-        .map(_mapAmenity)
-        .where((data) => data != null)
-        .cast<_AccessoriseData>()
-        .toList();
-
     final attributeItems = attributes
         .where((attr) => attr.attributeType != null)
         .map(_mapAttribute)
@@ -26,7 +15,7 @@ class AccessoriseWidget extends StatelessWidget {
         .cast<_AccessoriseData>()
         .toList();
 
-    final items = [...amenityItems, ...attributeItems];
+    final items = attributeItems;
 
     if (items.isEmpty) return const SizedBox.shrink();
 
@@ -56,16 +45,6 @@ class AccessoriseWidget extends StatelessWidget {
             )
             .toList(),
       ),
-    );
-  }
-
-  _AccessoriseData? _mapAmenity(String amenity) {
-    if (amenity.isEmpty) return null;
-    final key = amenity.toLowerCase();
-    return _AccessoriseData(
-      label: _formatAmenityLabel(key),
-      value: '',
-      icon: _iconForAmenity(key),
     );
   }
 
@@ -108,29 +87,6 @@ class AccessoriseWidget extends StatelessWidget {
             return Icons.info_outline;
         }
     }
-  }
-
-  IconData _iconForAmenity(String key) {
-    switch (key) {
-      case 'pool':
-      case 'swimming_pool':
-        return Icons.pool;
-      case 'wifi':
-        return Icons.wifi;
-      case 'ac':
-      case 'air_conditioner':
-      case 'air_conditioning':
-        return Icons.ac_unit;
-      case 'garden':
-        return Icons.park_outlined;
-      default:
-        return Icons.check_circle_outline;
-    }
-  }
-
-  String _formatAmenityLabel(String key) {
-    if (key.isEmpty) return '';
-    return key[0].toUpperCase() + key.substring(1);
   }
 }
 
