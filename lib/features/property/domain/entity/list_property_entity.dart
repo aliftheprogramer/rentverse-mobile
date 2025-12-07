@@ -22,6 +22,7 @@ class MetaEntity {
 class PropertyEntity {
   final String id;
   final String landlordId;
+  final LandlordEntity? landlord;
   final String title;
   final String description;
   final int propertyTypeId;
@@ -48,6 +49,7 @@ class PropertyEntity {
   const PropertyEntity({
     required this.id,
     required this.landlordId,
+    required this.landlord,
     required this.title,
     required this.description,
     required this.propertyTypeId,
@@ -146,6 +148,29 @@ class AllowedBillingPeriodEntity {
     required this.billingPeriodId,
     required this.billingPeriod,
   });
+}
+
+class LandlordEntity {
+  final String id;
+  final String? name;
+  final String? avatarUrl;
+  final bool? isVerified;
+  final LandlordProfileEntity? landlordProfile;
+
+  const LandlordEntity({
+    required this.id,
+    this.name,
+    this.avatarUrl,
+    this.isVerified,
+    this.landlordProfile,
+  });
+}
+
+class LandlordProfileEntity {
+  final int? lrsScore;
+  final int? responseRate;
+
+  const LandlordProfileEntity({this.lrsScore, this.responseRate});
 }
 
 class PropertyBillingPeriodEntity {

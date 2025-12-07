@@ -77,8 +77,10 @@ class BookingPropertyPage extends StatelessWidget {
 
                   final meta = property.metadata ?? {};
                   final ownerName =
-                      (meta['landlordName'] ?? meta['ownerName'] ?? '-')
-                          .toString();
+                      property.landlord?.name?.trim().isNotEmpty == true
+                      ? property.landlord!.name!
+                      : (meta['landlordName'] ?? meta['ownerName'] ?? '-')
+                            .toString();
                   final ownerEmail =
                       (meta['landlordEmail'] ?? meta['ownerEmail'] ?? '-')
                           .toString();
@@ -131,10 +133,11 @@ class BookingPropertyPage extends StatelessWidget {
                         const SizedBox(height: 12),
                         _LabeledField(
                           label: 'Current Address',
-                          child: const CustomTextField(
+                          child: CustomTextField(
                             hintText: '-',
-                            prefixIcon: Icon(Icons.home_outlined),
-                            readOnly: true,
+                            initialValue: '-',
+                            prefixIcon: const Icon(Icons.home_outlined),
+                            readOnly: false,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -165,17 +168,6 @@ class BookingPropertyPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         _LabeledField(
-                          label: 'Email',
-                          child: CustomTextField(
-                            key: ValueKey('owner-email-$ownerEmail'),
-                            hintText: ownerEmail,
-                            initialValue: ownerEmail,
-                            prefixIcon: const Icon(Icons.email_outlined),
-                            readOnly: true,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _LabeledField(
                           label: 'Current Address',
                           child: CustomTextField(
                             key: ValueKey(
@@ -184,18 +176,6 @@ class BookingPropertyPage extends StatelessWidget {
                             hintText: resolvedOwnerAddress,
                             initialValue: resolvedOwnerAddress,
                             prefixIcon: const Icon(Icons.home_outlined),
-                            readOnly: true,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _LabeledField(
-                          label: 'Phone Number',
-                          child: CustomTextField(
-                            key: ValueKey('owner-phone-$ownerPhone'),
-                            hintText: ownerPhone,
-                            initialValue: ownerPhone,
-                            keyboardType: TextInputType.phone,
-                            prefixIcon: const Icon(Icons.phone_outlined),
                             readOnly: true,
                           ),
                         ),
@@ -226,6 +206,7 @@ class BookingPropertyPage extends StatelessWidget {
                           label: 'Start Rent Date',
                           child: CustomTextField(
                             hintText: _formatDate(state.startDate),
+                            initialValue: _formatDate(state.startDate),
                             readOnly: true,
                             onTap: () async {
                               final now = DateTime.now();
@@ -248,9 +229,10 @@ class BookingPropertyPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         _LabeledField(
-                          label: 'Duration (Days)',
+                          label: 'Duration',
                           child: CustomTextField(
                             hintText: durationLabel,
+                            initialValue: durationLabel,
                             readOnly: true,
                             suffixIcon: const Icon(Icons.arrow_drop_down),
                             onTap: () =>

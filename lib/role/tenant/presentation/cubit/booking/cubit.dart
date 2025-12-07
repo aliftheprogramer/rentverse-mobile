@@ -16,12 +16,14 @@ class BookingCubit extends Cubit<BookingState> {
     try {
       final refs = await _getRentReferencesUseCase();
       final periods = refs.billingPeriods;
+      final hasPeriods = periods.isNotEmpty;
+      final firstId = hasPeriods ? periods.first.id : 0;
       final hasExistingSelection = periods.any(
         (period) => period.id == state.billingPeriodId,
       );
       final selectedId = hasExistingSelection
           ? state.billingPeriodId
-          : (periods.isNotEmpty ? periods.first.id : state.billingPeriodId);
+          : (hasPeriods ? firstId : state.billingPeriodId);
       emit(
         state.copyWith(
           isBillingPeriodsLoading: false,

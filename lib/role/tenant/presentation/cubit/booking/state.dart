@@ -25,7 +25,7 @@ class BookingState {
     isBillingPeriodsLoading: false,
     error: null,
     result: null,
-    billingPeriodId: 1,
+    billingPeriodId: 0,
     billingPeriods: const [],
     startDate: DateTime.now(),
   );

@@ -62,6 +62,7 @@ class MetaModel {
 class PropertyModel {
   final String id;
   final String landlordId;
+  final LandlordModel? landlord;
   final String title;
   final String description;
   final int propertyTypeId;
@@ -88,6 +89,7 @@ class PropertyModel {
   PropertyModel({
     required this.id,
     required this.landlordId,
+    required this.landlord,
     required this.title,
     required this.description,
     required this.propertyTypeId,
@@ -120,6 +122,9 @@ class PropertyModel {
     return PropertyModel(
       id: json['id'] as String? ?? '',
       landlordId: json['landlordId'] as String? ?? '',
+      landlord: json['landlord'] == null
+          ? null
+          : LandlordModel.fromJson(json['landlord'] as Map<String, dynamic>),
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       propertyTypeId: (json['propertyTypeId'] as num?)?.toInt() ?? 0,
@@ -196,6 +201,7 @@ class PropertyModel {
       allowedBillingPeriods: allowedBillingPeriods
           .map((e) => e.toEntity())
           .toList(),
+      landlord: landlord?.toEntity(),
     );
   }
 }
@@ -258,6 +264,67 @@ class PropertyBillingPeriodModel {
       slug: slug,
       label: label,
       durationMonths: durationMonths,
+    );
+  }
+}
+
+class LandlordModel {
+  final String id;
+  final String? name;
+  final String? avatarUrl;
+  final bool? isVerified;
+  final LandlordProfileModel? landlordProfile;
+
+  LandlordModel({
+    required this.id,
+    this.name,
+    this.avatarUrl,
+    this.isVerified,
+    this.landlordProfile,
+  });
+
+  factory LandlordModel.fromJson(Map<String, dynamic> json) {
+    return LandlordModel(
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String?,
+      avatarUrl: json['avatarUrl'] as String?,
+      isVerified: json['isVerified'] as bool?,
+      landlordProfile: json['landlordProfile'] == null
+          ? null
+          : LandlordProfileModel.fromJson(
+              json['landlordProfile'] as Map<String, dynamic>,
+            ),
+    );
+  }
+
+  LandlordEntity toEntity() {
+    return LandlordEntity(
+      id: id,
+      name: name,
+      avatarUrl: avatarUrl,
+      isVerified: isVerified,
+      landlordProfile: landlordProfile?.toEntity(),
+    );
+  }
+}
+
+class LandlordProfileModel {
+  final int? lrsScore;
+  final int? responseRate;
+
+  LandlordProfileModel({this.lrsScore, this.responseRate});
+
+  factory LandlordProfileModel.fromJson(Map<String, dynamic> json) {
+    return LandlordProfileModel(
+      lrsScore: (json['lrs_score'] as num?)?.toInt(),
+      responseRate: (json['response_rate'] as num?)?.toInt(),
+    );
+  }
+
+  LandlordProfileEntity toEntity() {
+    return LandlordProfileEntity(
+      lrsScore: lrsScore,
+      responseRate: responseRate,
     );
   }
 }
