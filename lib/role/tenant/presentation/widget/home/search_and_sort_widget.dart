@@ -1,56 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rentverse/role/tenant/presentation/cubit/property_types/property_types_cubit.dart';
+import 'package:rentverse/role/tenant/presentation/cubit/property_types/property_types_state.dart';
 import 'package:rentverse/role/tenant/presentation/cubit/search_and_sort/cubit.dart';
 import 'package:rentverse/role/tenant/presentation/cubit/search_and_sort/state.dart';
+import 'package:rentverse/core/services/service_locator.dart';
 
 class SearchAndSortWidget extends StatelessWidget {
-  final List<String> categories;
   final void Function(String query, String category)? onChanged;
 
-  const SearchAndSortWidget({
-    super.key,
-    this.categories = const ['All', 'House', 'Apartment', 'Townhouse'],
-    this.onChanged,
-  });
+  const SearchAndSortWidget({super.key, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => SearchAndSortCubit(),
-      child: BlocBuilder<SearchAndSortCubit, SearchAndSortState>(
-        builder: (context, state) {
-          final cubit = context.read<SearchAndSortCubit>();
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _SearchField(
-                initialValue: state.query,
-                onChanged: (q) {
-                  cubit.updateQuery(q);
-                  onChanged?.call(q, state.selectedType);
-                },
-              ),
-              const SizedBox(height: 12),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (final c in categories) ...[
-                      _FilterChipItem(
-                        label: c,
-                        selected: state.selectedType == c,
-                        onTap: () {
-                          cubit.selectType(c);
-                          onChanged?.call(state.query, c);
-                        },
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => PropertyTypesCubit(sl())..fetch()),
+        BlocProvider(create: (_) => SearchAndSortCubit()),
+      ],
+      child: BlocBuilder<PropertyTypesCubit, PropertyTypesState>(
+        builder: (context, typesState) {
+          final categories = typesState.categories;
+          return BlocBuilder<SearchAndSortCubit, SearchAndSortState>(
+            builder: (context, state) {
+              final cubit = context.read<SearchAndSortCubit>();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _SearchField(
+                    initialValue: state.query,
+                    onChanged: (q) {
+                      cubit.updateQuery(q);
+                      onChanged?.call(q, state.selectedType);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  if (typesState.isLoading)
+                    const SizedBox(
+                      height: 32,
+                      child: Center(
+                        child: SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+                    )
+                  else if (typesState.error != null)
+                    Text(
+                      'Gagal memuat tipe properti',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (final c in categories) ...[
+                          _FilterChipItem(
+                            label: c,
+                            selected: state.selectedType == c,
+                            onTap: () {
+                              cubit.selectType(c);
+                              onChanged?.call(state.query, c);
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
