@@ -47,6 +47,14 @@ import 'package:rentverse/features/property/data/source/property_api_service.dar
 import 'package:rentverse/features/property/domain/repository/property_repository.dart';
 import 'package:rentverse/features/property/domain/usecase/get_properties_usecase.dart';
 import 'package:rentverse/features/property/domain/usecase/get_property_detail_usecase.dart';
+import 'package:rentverse/features/chat/data/source/chat_api_service.dart';
+import 'package:rentverse/features/chat/data/source/chat_socket_service.dart';
+import 'package:rentverse/features/chat/data/repository/chat_repository_impl.dart';
+import 'package:rentverse/features/chat/domain/repository/chat_repository.dart';
+import 'package:rentverse/features/chat/domain/usecase/get_conversations_usecase.dart';
+import 'package:rentverse/features/chat/domain/usecase/get_messages_usecase.dart';
+import 'package:rentverse/features/chat/domain/usecase/send_message_usecase.dart';
+import 'package:rentverse/features/chat/domain/usecase/start_chat_usecase.dart';
 import 'package:rentverse/core/network/open_map_street_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -61,6 +69,9 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<NotificationService>(
     () =>
         NotificationService(dio: sl<Dio>(), prefs: sl(), logger: sl<Logger>()),
+  );
+  sl.registerLazySingleton<ChatSocketService>(
+    () => ChatSocketService(sl<Logger>(), sl()),
   );
 
   // Auth data sources & services
@@ -80,6 +91,12 @@ Future<void> setupServiceLocator() async {
   );
   sl.registerLazySingleton<PropertyRepository>(
     () => PropertyRepositoryImpl(sl<PropertyApiService>()),
+  );
+  sl.registerLazySingleton<ChatApiService>(
+    () => ChatApiServiceImpl(sl<DioClient>(), sl<Logger>()),
+  );
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(sl<ChatApiService>()),
   );
   sl.registerLazySingleton<BookingApiService>(
     () => BookingApiServiceImpl(sl<DioClient>()),
@@ -136,6 +153,10 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton(
     () => GetPropertyDetailUseCase(sl<PropertyRepository>()),
   );
+  sl.registerLazySingleton(() => StartChatUseCase(sl<ChatRepository>()));
+  sl.registerLazySingleton(() => GetConversationsUseCase(sl<ChatRepository>()));
+  sl.registerLazySingleton(() => GetMessagesUseCase(sl<ChatRepository>()));
+  sl.registerLazySingleton(() => SendMessageUseCase(sl<ChatRepository>()));
   // Booking usecases
   sl.registerLazySingleton(
     () => CreateBookingUseCase(sl<BookingsRepository>()),

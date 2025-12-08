@@ -7,6 +7,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rentverse/common/colors/custom_color.dart';
 import 'package:rentverse/core/services/service_locator.dart';
 import 'package:rentverse/features/property/domain/entity/list_property_entity.dart';
+import 'package:rentverse/features/chat/presentation/pages/chat_room_page.dart';
+import 'package:rentverse/features/chat/domain/usecase/start_chat_usecase.dart';
+import 'package:rentverse/common/bloc/auth/auth_cubit.dart';
+import 'package:rentverse/common/bloc/auth/auth_state.dart';
 import 'package:rentverse/role/tenant/presentation/widget/detail_property/amenities_widget.dart';
 import 'package:rentverse/role/tenant/presentation/widget/detail_property/accessorise_widget.dart';
 import 'package:rentverse/role/tenant/presentation/widget/detail_property/image_tile.dart';
@@ -127,12 +131,45 @@ class DetailProperty extends StatelessWidget {
                     ),
                   );
                 },
+                onChat: () => _startChat(context, currentProperty),
               ),
             ),
           );
         },
       ),
     );
+  }
+}
+
+Future<void> _startChat(BuildContext context, PropertyEntity property) async {
+  final authState = context.read<AuthCubit>().state;
+  if (authState is! Authenticated) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Anda perlu login untuk memulai chat')),
+    );
+    return;
+  }
+
+  try {
+    final roomId = await sl<StartChatUseCase>()(property.id);
+    if (!context.mounted) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatRoomPage(
+          roomId: roomId,
+          otherUserName: _extractOwnerName(property) ?? 'Owner',
+          otherUserAvatar: _extractOwnerAvatar(property),
+          propertyTitle: property.title,
+          currentUserId: authState.user.id,
+        ),
+      ),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Gagal memulai chat: $e')));
   }
 }
 

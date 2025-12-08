@@ -149,14 +149,11 @@ class _TenantRentPageState extends State<TenantRentPage> {
                     items: paymentPending,
                     buttonLabel: 'Go to Payment',
                     onTap: (item) => _handlePayment(context, item),
-                    leading: const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFF1CD8D2),
-                        ),
+                    leading: const Text(
+                      '***',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1CD8D2),
                       ),
                     ),
                   ),

@@ -4,10 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:rentverse/common/colors/custom_color.dart';
 
 class BookingButton extends StatelessWidget {
-  const BookingButton({super.key, required this.price, this.onTap});
+  const BookingButton({
+    super.key,
+    required this.price,
+    this.onTap,
+    this.onChat,
+  });
 
   final String price;
   final VoidCallback? onTap;
+  final VoidCallback? onChat;
 
   @override
   Widget build(BuildContext context) {
@@ -49,34 +55,35 @@ class BookingButton extends StatelessWidget {
               const SizedBox(height: 12),
 
               // TOMBOL UTAMA (ElevatedButton dengan Gradient)
-              Container(
-                width: double.infinity,
-                height: 50, // Tinggi fix biar gagah
-                decoration: BoxDecoration(
-                  gradient: customLinearGradient, // Gradient di sini
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ElevatedButton(
-                  onPressed: onTap,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Colors.transparent, // Transparan agar gradient terlihat
-                    shadowColor:
-                        Colors.transparent, // Hilangkan shadow bawaan button
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              if (onChat != null)
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: onChat,
+                        icon: const Icon(Icons.chat, color: appPrimaryColor),
+                        label: const Text(
+                          'Chat Owner',
+                          style: TextStyle(
+                            color: appPrimaryColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: appPrimaryColor),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'Booking',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
+                    const SizedBox(width: 12),
+                    Expanded(child: _BookingGradientButton(onTap: onTap)),
+                  ],
+                )
+              else
+                _BookingGradientButton(onTap: onTap),
             ],
           ),
         ),
@@ -100,5 +107,41 @@ class BookingButton extends StatelessWidget {
     }
     final reversed = buffer.toString().split('').reversed.join();
     return 'Rp $reversed';
+  }
+}
+
+class _BookingGradientButton extends StatelessWidget {
+  const _BookingGradientButton({this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 50,
+      decoration: BoxDecoration(
+        gradient: customLinearGradient,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: const Text(
+          'Booking',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
   }
 }
