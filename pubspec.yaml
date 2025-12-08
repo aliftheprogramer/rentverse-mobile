@@ -40,6 +40,7 @@ dependencies:
   device_info_plus: ^10.1.0
   midtrans_snap: ^1.0.1
   webview_flutter: ^4.8.0
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:

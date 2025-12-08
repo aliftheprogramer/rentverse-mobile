@@ -33,7 +33,7 @@ android {
         versionName = flutter.versionName
         manifestPlaceholders.putAll(
             mapOf(
-                "midtransClientKey" to "SB-Mid-client-Jctrg5LVP60MSIiC",
+                "midtransClientKey" to "Mid-client--6t_PVMPXINyqzc6",
                 "uikitTheme" to "@style/Theme.AppCompat.Light",
             ),
         )

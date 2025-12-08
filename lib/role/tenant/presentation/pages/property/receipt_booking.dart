@@ -32,6 +32,7 @@ class ReceiptBookingPage extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => MidtransPaymentPage(
+                    booking: state.response,
                     redirectUrl: state.payment!.redirectUrl,
                   ),
                 ),

@@ -10,13 +10,19 @@ import '../bloc/navigation/navigation_cubit.dart';
 class NavigationContainer extends StatelessWidget {
   final List<Widget>? pages;
   final List<BottomNavigationBarItem>? items;
+  final int initialIndex;
 
-  const NavigationContainer({super.key, this.pages, this.items});
+  const NavigationContainer({
+    super.key,
+    this.pages,
+    this.items,
+    this.initialIndex = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => NavigationCubit(),
+      create: (_) => NavigationCubit(initialIndex: initialIndex),
       child: Scaffold(
         body: _buildBody(pages),
         bottomNavigationBar: _buildBottomNavigationBar(context, items),
