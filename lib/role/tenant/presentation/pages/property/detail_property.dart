@@ -71,6 +71,7 @@ class DetailProperty extends StatelessWidget {
                           landlordId: currentProperty.landlordId,
                           ownerName: _extractOwnerName(currentProperty),
                           avatarUrl: _extractOwnerAvatar(currentProperty),
+                          onChat: () => _startChat(context, currentProperty),
                         ),
                         const SizedBox(height: 10),
                         Container(
