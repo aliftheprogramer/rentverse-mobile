@@ -97,7 +97,7 @@ class _ActiveRentDetailView extends StatelessWidget {
                 const SizedBox(height: 16),
                 _DetailCard(property: property, booking: booking),
                 const SizedBox(height: 16),
-                _ActionBar(onExtend: () {}),
+                _ActionBar(booking: booking, onExtend: () {}),
               ],
             ),
           );
@@ -303,12 +303,27 @@ class _DetailRow extends StatelessWidget {
 }
 
 class _ActionBar extends StatelessWidget {
-  const _ActionBar({required this.onExtend});
+  const _ActionBar({required this.booking, required this.onExtend});
 
+  final BookingListItemEntity booking;
   final VoidCallback onExtend;
 
   @override
   Widget build(BuildContext context) {
+    final isFinished = booking.status.toUpperCase() == 'FINISHED';
+
+    if (isFinished) {
+      return CustomButton(
+        text: 'Review',
+        onTap: () {
+          // TODO: open review flow. Placeholder for now.
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Open review screen')));
+        },
+      );
+    }
+
     return CustomButton(text: 'Extend', onTap: onExtend);
   }
 }
