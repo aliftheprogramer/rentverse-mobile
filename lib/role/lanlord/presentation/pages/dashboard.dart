@@ -4,94 +4,238 @@ import 'package:rentverse/role/lanlord/widget/dashboard/property_being_proposed.
 import 'package:rentverse/role/lanlord/widget/dashboard/rented_property.dart';
 import 'package:rentverse/role/lanlord/widget/dashboard/stats_widget.dart';
 import 'package:rentverse/role/lanlord/widget/dashboard/your_trust_index.dart';
+import 'package:rentverse/core/services/service_locator.dart';
+import 'package:rentverse/role/lanlord/domain/entity/dashboard_entity_response.dart';
+import 'package:rentverse/role/lanlord/domain/usecase/get_landlord_dashboard_usecase.dart';
+import 'package:rentverse/features/auth/domain/usecase/get_local_user_usecase.dart';
+import 'package:intl/intl.dart';
+import 'package:rentverse/common/colors/custom_color.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rentverse/common/widget/pull_to_refresh.dart';
+import 'package:rentverse/role/lanlord/presentation/cubit/dashboard/landlord_dashboard_cubit.dart';
+import 'package:rentverse/role/lanlord/presentation/cubit/dashboard/landlord_dashboard_state.dart';
 
-class LandlordDashboardPage extends StatelessWidget {
+class LandlordDashboardPage extends StatefulWidget {
   const LandlordDashboardPage({super.key});
 
   @override
+  State<LandlordDashboardPage> createState() => _LandlordDashboardPageState();
+}
+
+class _LandlordDashboardPageState extends State<LandlordDashboardPage> {
+  @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: const CustomAppBar(
-          displayName: 'Landlord',
-          backgroundColor: Colors.white,
+    return BlocProvider(
+      create: (_) => LandlordDashboardCubit(
+        sl<GetLocalUserUseCase>(),
+        sl<GetLandlordDashboardUseCase>(),
+      )..load(),
+      child: _LandlordDashboardView(),
+    );
+  }
+}
+
+class _LandlordDashboardView extends StatelessWidget {
+  const _LandlordDashboardView();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<LandlordDashboardCubit, LandlordDashboardState>(
+      builder: (context, state) {
+        return SafeArea(
+          child: Scaffold(
+            appBar: CustomAppBar(
+              displayName: state.user?.name ?? 'Landlord',
+              backgroundColor: Colors.white,
+            ),
+            backgroundColor: Colors.grey.shade100,
+            body: NotificationListener<ReloadDataNotification>(
+              onNotification: (n) {
+                context.read<LandlordDashboardCubit>().refresh();
+                return true;
+              },
+              child: _buildBody(context, state),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBody(BuildContext context, LandlordDashboardState state) {
+    if (state.status == LandlordDashboardStatus.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (state.status == LandlordDashboardStatus.failure) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Failed to load dashboard: ${state.errorMessage ?? ''}'),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: () => context.read<LandlordDashboardCubit>().load(),
+              child: const Text('Retry'),
+            ),
+          ],
         ),
-        backgroundColor: Colors.grey.shade100,
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              StatsWidget(
-                periods: const ['Monthly', 'Weekly', 'Daily'],
-                selectedPeriod: 'Monthly',
-                items: const [
-                  StatItem(
-                    icon: Icons.remove_red_eye_outlined,
-                    title: 'New Visits',
-                    value: '90',
-                    delta: '+1%',
-                  ),
-                  StatItem(
-                    icon: Icons.home_work_outlined,
-                    title: 'Property for Rent',
-                    value: '3',
-                    delta: '+1%',
-                  ),
-                ],
+      );
+    }
+
+    final overview = state.dashboard?.overview;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top: wallet card full width (styled like MyWallet BalanceCard)
+          _DashboardWalletCard(totalIncome: overview?.totalIncome),
+          const SizedBox(height: 16),
+          StatsWidget(
+            periods: const ['Monthly', 'Weekly', 'Daily'],
+            selectedPeriod: 'Monthly',
+            items: [
+              StatItem(
+                icon: Icons.pie_chart_outline,
+                title: overview?.occupancy.label ?? 'Occupancy',
+                value: (overview?.occupancy.active ?? 0).toString(),
+                delta: '${overview?.occupancy.pending ?? 0} pending',
               ),
-              const SizedBox(height: 16),
-              const YourTrustIndex(score: 80),
-              const SizedBox(height: 16),
-              PropertyBeingProposed(
-                items: const [
-                  PropertyProposal(
-                    title: 'Joane Residence',
-                    city: 'Kuala Lumpur',
-                    status: 'Waiting',
-                    imageUrl:
-                        'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
-                  ),
-                  PropertyProposal(
-                    title: 'Joane Residence',
-                    city: 'Kuala Lumpur',
-                    status: 'Waiting',
-                    imageUrl:
-                        'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              RentedProperty(
-                items: const [
-                  RentedItem(
-                    renterName: 'Renata',
-                    renterAvatarUrl:
-                        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80',
-                    title: 'Joane Residence',
-                    city: 'Kuala Lumpur',
-                    startDate: '28/12/2025',
-                    endDate: '30/12/2025',
-                    duration: '2 Days',
-                    imageUrl:
-                        'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
-                  ),
-                  RentedItem(
-                    renterName: 'Renata',
-                    renterAvatarUrl:
-                        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80',
-                    title: 'Joane Residence',
-                    city: 'Kuala Lumpur',
-                    startDate: '28/12/2025',
-                    endDate: '30/12/2025',
-                    duration: '2 Days',
-                    imageUrl:
-                        'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80',
-                  ),
-                ],
+              StatItem(
+                icon: Icons.home_work_outlined,
+                title: overview?.inventory.label ?? 'Listed Properties',
+                value: (overview?.inventory.total ?? 0).toString(),
+                delta: '',
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          // Trust index below stats
+          YourTrustIndex(score: (overview?.trust.score ?? 0).toDouble()),
+          const SizedBox(height: 16),
+          const SizedBox(height: 16),
+          PropertyBeingProposed(
+            items: const [
+              PropertyProposal(
+                title: 'Joane Residence',
+                city: 'Kuala Lumpur',
+                status: 'Waiting',
+                imageUrl:
+                    'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
+              ),
+              PropertyProposal(
+                title: 'Joane Residence',
+                city: 'Kuala Lumpur',
+                status: 'Waiting',
+                imageUrl:
+                    'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          RentedProperty(
+            items: const [
+              RentedItem(
+                renterName: 'Renata',
+                renterAvatarUrl:
+                    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80',
+                title: 'Joane Residence',
+                city: 'Kuala Lumpur',
+                startDate: '28/12/2025',
+                endDate: '30/12/2025',
+                duration: '2 Days',
+                imageUrl:
+                    'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardWalletCard extends StatelessWidget {
+  const _DashboardWalletCard({this.totalIncome});
+
+  final TotalIncomeEntity? totalIncome;
+
+  String _formatAmount(num? amount, String? currency) {
+    final v = (amount ?? 0).toDouble();
+    try {
+      final f = NumberFormat.currency(
+        locale: 'id_ID',
+        symbol: (currency == null || currency.isEmpty) ? 'Rp ' : '$currency ',
+        decimalDigits: 0,
+      );
+      return f.format(v);
+    } catch (_) {
+      return '${currency ?? ''} ${v.toStringAsFixed(0)}';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: customLinearGradient,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: appPrimaryColor.withOpacity(0.12),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Wallet Balance',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    totalIncome?.currency ?? 'IDR',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _formatAmount(totalIncome?.amount, totalIncome?.currency),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ],
         ),
       ),
     );

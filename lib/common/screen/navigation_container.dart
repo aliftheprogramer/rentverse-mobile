@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rentverse/common/widget/pull_to_refresh.dart';
 
 import 'package:rentverse/common/colors/custom_color.dart';
 
@@ -35,22 +36,38 @@ Widget _buildBody(List<Widget>? pages) {
   return BlocBuilder<NavigationCubit, int>(
     builder: (context, index) {
       final resolvedPages = pages ?? _defaultPages();
-      return IndexedStack(index: index, children: resolvedPages);
+      // Wrap each page with PullToRefresh so swipe-down triggers a reload
+      final wrapped = resolvedPages
+          .map((p) => PullToRefresh(child: p))
+          .toList(growable: false);
+      return IndexedStack(index: index, children: wrapped);
     },
   );
 }
 
 List<Widget> _defaultPages() => const [
-  _TextPlaceholder('Home'),
-  _TextPlaceholder('Search'),
-  _TextPlaceholder('Profile'),
+  _ReloadablePlaceholder('Home'),
+  _ReloadablePlaceholder('Search'),
+  _ReloadablePlaceholder('Profile'),
 ];
 
-class _TextPlaceholder extends StatelessWidget {
+// Example listener: show a quick snackbar when a global reload is requested.
+class _ReloadablePlaceholder extends StatelessWidget {
   final String title;
-  const _TextPlaceholder(this.title);
+  const _ReloadablePlaceholder(this.title);
+
   @override
-  Widget build(BuildContext context) => Center(child: Text(title));
+  Widget build(BuildContext context) {
+    return NotificationListener<ReloadDataNotification>(
+      onNotification: (n) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Reload requested')));
+        return true;
+      },
+      child: Center(child: Text(title)),
+    );
+  }
 }
 
 Widget _buildBottomNavigationBar(

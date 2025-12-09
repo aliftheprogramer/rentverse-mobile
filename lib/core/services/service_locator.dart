@@ -58,6 +58,10 @@ import 'package:rentverse/features/chat/domain/usecase/get_messages_usecase.dart
 import 'package:rentverse/features/chat/domain/usecase/send_message_usecase.dart';
 import 'package:rentverse/features/chat/domain/usecase/start_chat_usecase.dart';
 import 'package:rentverse/core/network/open_map_street_api.dart';
+import 'package:rentverse/role/lanlord/data/source/landlord_dashboard_api_service.dart';
+import 'package:rentverse/role/lanlord/data/repository/landlord_dashboard_repository_impl.dart';
+import 'package:rentverse/role/lanlord/domain/repository/landlord_dashboard_repository.dart';
+import 'package:rentverse/role/lanlord/domain/usecase/get_landlord_dashboard_usecase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final sl = GetIt.instance;
@@ -90,6 +94,13 @@ Future<void> setupServiceLocator() async {
   );
   sl.registerLazySingleton<PropertyApiService>(
     () => PropertyApiServiceImpl(sl<DioClient>()),
+  );
+  // Landlord dashboard
+  sl.registerLazySingleton<LandlordDashboardApiService>(
+    () => LandlordDashboardApiServiceImpl(sl<DioClient>()),
+  );
+  sl.registerLazySingleton<LandlordDashboardRepository>(
+    () => LandlordDashboardRepositoryImpl(sl<LandlordDashboardApiService>()),
   );
   sl.registerLazySingleton<PropertyRepository>(
     () => PropertyRepositoryImpl(sl<PropertyApiService>()),
@@ -177,6 +188,10 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton(() => PayInvoiceUseCase(sl<MidtransRepository>()));
 
   sl.registerLazySingleton(() => GetBookingsUseCase(sl<BookingsRepository>()));
+  // Landlord usecase
+  sl.registerLazySingleton(
+    () => GetLandlordDashboardUseCase(sl<LandlordDashboardRepository>()),
+  );
 
   // cubits
   sl.registerLazySingleton(() => AuthCubit());

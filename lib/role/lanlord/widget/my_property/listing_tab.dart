@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rentverse/role/lanlord/cubit/property/cubit.dart';
-import 'package:rentverse/role/lanlord/cubit/property/state.dart';
+import 'package:rentverse/role/lanlord/presentation/cubit/property/cubit.dart';
+import 'package:rentverse/role/lanlord/presentation/cubit/property/state.dart';
 import 'package:rentverse/role/lanlord/widget/my_property/property_components.dart';
 
 class ListingTab extends StatelessWidget {
