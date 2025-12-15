@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:rentverse/common/utils/network_utils.dart';
+import 'package:rentverse/common/widget/pull_to_refresh.dart';
 import 'package:rentverse/core/services/service_locator.dart';
 import 'package:rentverse/features/review/domain/usecase/get_property_reviews_usecase.dart';
-import 'package:rentverse/common/utils/network_utils.dart';
 
 class PropertyReviewsWidget extends StatefulWidget {
   final String propertyId;
@@ -20,7 +21,17 @@ class _PropertyReviewsWidgetState extends State<PropertyReviewsWidget> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _refreshAll();
+  }
+
+  Future<void> _refreshAll() async {
+    if (_loading) return;
+    setState(() {
+      _items = [];
+      _cursor = null;
+      _hasMore = false;
+    });
+    await _load();
   }
 
   Future<void> _load() async {
@@ -59,34 +70,53 @@ class _PropertyReviewsWidgetState extends State<PropertyReviewsWidget> {
       return role.toUpperCase() == 'TENANT';
     }).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 12),
-        const Text(
-          'Reviews',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 8),
-        if (tenantItems.isEmpty && !_loading)
-          const Text(
-            'BELUM ADA NILAI',
-            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600),
-          ),
-        for (final it in tenantItems) ...[
-          _buildReviewItem(it),
-          const SizedBox(height: 8),
-        ],
-        if (_hasMore)
-          Center(
-            child: TextButton(
-              onPressed: _loading ? null : _load,
-              child: _loading
-                  ? const CircularProgressIndicator()
-                  : const Text('Load more'),
+    return NotificationListener<ReloadDataNotification>(
+      onNotification: (_) {
+        _refreshAll();
+        return true;
+      },
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          final metrics = notification.metrics;
+          final nearBottom = metrics.extentAfter < 150;
+          if (nearBottom && _hasMore && !_loading) {
+            _load();
+          }
+          return false;
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            const Text(
+              'Reviews',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
-          ),
-      ],
+            const SizedBox(height: 8),
+            if (tenantItems.isEmpty && !_loading)
+              const Text(
+                'BELUM ADA NILAI',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            for (final it in tenantItems) ...[
+              _buildReviewItem(it),
+              const SizedBox(height: 8),
+            ],
+            if (_hasMore)
+              Center(
+                child: TextButton(
+                  onPressed: _loading ? null : _load,
+                  child: _loading
+                      ? const CircularProgressIndicator()
+                      : const Text('Load more'),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 

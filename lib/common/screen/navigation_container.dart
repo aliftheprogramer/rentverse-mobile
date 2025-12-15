@@ -8,7 +8,7 @@ import 'package:rentverse/common/colors/custom_color.dart';
 
 import '../bloc/navigation/navigation_cubit.dart';
 
-class NavigationContainer extends StatelessWidget {
+class NavigationContainer extends StatefulWidget {
   final List<Widget>? pages;
   final List<BottomNavigationBarItem>? items;
   final int initialIndex;
@@ -21,54 +21,75 @@ class NavigationContainer extends StatelessWidget {
   });
 
   @override
+  State<NavigationContainer> createState() => _NavigationContainerState();
+}
+
+class _NavigationContainerState extends State<NavigationContainer> {
+  late List<int> _reloadTicks;
+
+  @override
+  void initState() {
+    super.initState();
+    final count = (widget.pages!).length;
+    _reloadTicks = List<int>.filled(count, 0, growable: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant NavigationContainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newCount = (widget.pages!).length;
+    if (newCount != _reloadTicks.length) {
+      _reloadTicks = List<int>.filled(newCount, 0, growable: true);
+    }
+  }
+
+  Future<void> _restartPage(int index) async {
+    setState(() => _reloadTicks[index]++);
+    // Small delay so RefreshIndicator can complete smoothly
+    await Future.delayed(const Duration(milliseconds: 200));
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => NavigationCubit(initialIndex: initialIndex),
+      create: (_) => NavigationCubit(initialIndex: widget.initialIndex),
       child: Scaffold(
-        body: _buildBody(pages),
-        bottomNavigationBar: _buildBottomNavigationBar(context, items),
+        body: _buildBody(widget.pages, _reloadTicks, _restartPage),
+        bottomNavigationBar: _buildBottomNavigationBar(context, widget.items),
       ),
     );
   }
 }
 
-Widget _buildBody(List<Widget>? pages) {
+Widget _buildBody(
+  List<Widget>? pages,
+  List<int> reloadTicks,
+  Future<void> Function(int) restartPage,
+) {
   return BlocBuilder<NavigationCubit, int>(
     builder: (context, index) {
-      final resolvedPages = pages ?? _defaultPages();
-      // Wrap each page with PullToRefresh so swipe-down triggers a reload
-      final wrapped = resolvedPages
-          .map((p) => PullToRefresh(child: p))
-          .toList(growable: false);
+      final resolvedPages = pages!;
+
+      final wrapped = <Widget>[];
+      for (var i = 0; i < resolvedPages.length; i++) {
+        final page = resolvedPages[i];
+        wrapped.add(
+          PullToRefresh(
+            onRefresh: () => restartPage(i),
+            child: KeyedSubtree(
+              key: ValueKey('nav_page_${i}_${reloadTicks[i]}'),
+              child: page,
+            ),
+          ),
+        );
+      }
+
       return IndexedStack(index: index, children: wrapped);
     },
   );
 }
 
-List<Widget> _defaultPages() => const [
-  _ReloadablePlaceholder('Home'),
-  _ReloadablePlaceholder('Search'),
-  _ReloadablePlaceholder('Profile'),
-];
-
 // Example listener: show a quick snackbar when a global reload is requested.
-class _ReloadablePlaceholder extends StatelessWidget {
-  final String title;
-  const _ReloadablePlaceholder(this.title);
-
-  @override
-  Widget build(BuildContext context) {
-    return NotificationListener<ReloadDataNotification>(
-      onNotification: (n) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Reload requested')));
-        return true;
-      },
-      child: Center(child: Text(title)),
-    );
-  }
-}
 
 Widget _buildBottomNavigationBar(
   BuildContext context,
