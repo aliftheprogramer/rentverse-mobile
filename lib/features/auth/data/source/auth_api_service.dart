@@ -1,8 +1,6 @@
 //lib/features/auth/data/source/auth_api_service.dart
 
 import 'dart:developer' as developer;
-import 'dart:ffi';
-
 import 'package:rentverse/features/auth/data/models/request/login_request_model.dart';
 import 'package:rentverse/features/auth/data/models/request/register_request_model.dart';
 import 'package:rentverse/features/auth/data/models/request/update_profile_request_model.dart';
@@ -123,7 +121,7 @@ class AuthApiServiceImpl implements AuthApiService {
 
       return BaseResponseModel.fromJson(
         response.data,
-        (json) => json as Map<String, Int>,
+        (json) => json as Map<String, int>,
       );
     } catch (e) {
       rethrow;
@@ -135,11 +133,11 @@ class AuthApiServiceImpl implements AuthApiService {
     Map<String, dynamic> body,
   ) async {
     try {
-      final response = await _dioClient.post('/auth/otp/verify', data: body);
+      final response = await _dioClient.post('/auth/otp/verifi', data: body);
 
       return BaseResponseModel.fromJson(
         response.data,
-        (json) => json as Map<String, dynamic>,
+        (json) => json as Map<String, int>,
       );
     } catch (e) {
       rethrow;

@@ -32,7 +32,6 @@ class DioInterceptor extends Interceptor {
     final token = _sharedPreferences.getString(ApiConstants.tokenKey);
 
     if (token != null && token.isNotEmpty) {
-      // options.headers['authorization'] = 'Bearer$token';
       options.headers['authorizatiom'] = 'Bearer$token';
     }
 

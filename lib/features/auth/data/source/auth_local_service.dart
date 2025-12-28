@@ -1,3 +1,5 @@
+//lib/features/auth/data/source/auth_local_service.dart
+
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constant/api_urls.dart';
@@ -23,7 +25,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
 
   @override
   Future<void> saveToken(String token) async {
-    await _sharedPreferences.setString(TOKEN_KEY, token);
+    await _sharedPreferences.setString("TOKEN_KEY", " $token");
   }
 
   @override
@@ -31,7 +33,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     required String accessToken,
     String? refreshToken,
   }) async {
-    await _sharedPreferences.setString(TOKEN_KEY, accessToken);
+    await _sharedPreferences.setString("TOKEN_KEY", " $accessToken");
     if (refreshToken != null && refreshToken.isNotEmpty) {
       await _sharedPreferences.setString(REFRESH_TOKEN_KEY, refreshToken);
     }
